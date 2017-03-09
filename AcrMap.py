@@ -2,6 +2,7 @@ import numpy as np
 from skimage import io, exposure
 from matplotlib import pyplot as plt
 from IPython.display import  Image
+from sklearn.naive_bayes import GaussianNB
 import colorsys
 from sklearn import svm
 
@@ -33,10 +34,16 @@ def mix_brand(path,band_1,band_2,band_3):
     return img432
 
 
-img_zhouwei_qiege = read_band("zhouwei_qiege", 3)
+#img_zhouwei_qiege = read_band("zhouwei_qiege", 3)
 img_shuiti_qiege = mix_brand("shuiti_qiege_1", 5, 4, 3)
 img_zhouwei_qiege = mix_brand("zhouwei_qiege", 5, 4, 3)
 #img_wuhan_xiao = mix_brand("wuhan_xiao",5,4,3)
+img_wuhan_xiao = mix_brand("zhouwei_qiege",5,4,3)
+
+#plt.imshow(img_zhouwei_qiege)
+#plt.show()
+#plt.figure()
+
 #print "img_shuiti_qiege is ", img_shuiti_qiege
 #img_shuiti_qiege = mix_brand("shuiti_qiege_1", 5, 4, 3)
 
@@ -139,25 +146,44 @@ test = RGB_HSI(img_wuhan_xiao)
 #compare_histogram('HSI',data_1,data_2)
 #plt.show()
 
-# SVM
-data=np.vstack([data_1,data_2])
-#print len(data),len(data_1),len(data_2)
-x = np.array(data)
-#print "type x",type(x),"shape x",x.shape
+sample_size = 1000
 
-lable=[0]*len(data_1) + [1]*len(data_2)
-y = np.array(lable)
+# SVM
+
+choice_data1 =  np.random.choice(np.asarray(range(len(data_1))),sample_size)
+choice_data2 =  np.random.choice(np.asarray(range(len(data_2))),sample_size)
+
+data=np.vstack([data_1[choice_data1],data_2[choice_data2]])
+
+#print len(data),len(data_1),len(data_2)
+x = data
+#print "type x",type(x),"shape x",x.shape
+lable=[0]*sample_size + [1]*sample_size
+y = np.asarray(lable)
 
 #print y, len(y)
 
-print 'fitting svm...'
+print 'fitting GaussianNB...'
 
-clf_linear  = svm.SVC(kernel='linear',C=0.1).fit(x, y)
+clf_linear  = svm.LinearSVC().fit(x, y)
 
-shape = test.shape
+clf_linear.fit(x, y)
+
+
+shape = [test.shape[0],test.shape[1]]
+
+print shape
 
 answer = clf_linear.predict(test.reshape(-1,3))
 
-answer.reshape(shape)
+answer = answer.reshape(shape)
+
+answer = np.dstack([answer * 255]*3).astype('uint8')
+
+print answer.shape
+
+plt.imshow(answer)
+
+plt.show()
 
 print "answer is ", answer
