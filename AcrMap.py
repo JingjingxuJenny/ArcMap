@@ -9,8 +9,8 @@ from sklearn import svm
 
 def read_band(path, n):
     if n in range(1,12):
-        print path
-        img = io.imread("/Users/jingjingxu/PycharmProjects/ArcMap/"+str(path)+'/LC81200402014162LGN00_B' + str(n) + '.tif',plugin='matplotlib')
+        #print path
+        img = io.imread(str(path)+'/LC81200402014162LGN00_B' + str(n) + '.tif',plugin='matplotlib')
 
         img = img.astype(float)
         return img
@@ -33,11 +33,11 @@ def mix_brand(path,band_1,band_2,band_3):
     return img432
 
 
-#img_zhouwei_qiege = read_band("zhouwei_qiege", 3)
+img_zhouwei_qiege = read_band("zhouwei_qiege", 3)
 img_shuiti_qiege = mix_brand("shuiti_qiege_1", 5, 4, 3)
 img_zhouwei_qiege = mix_brand("zhouwei_qiege", 5, 4, 3)
-img_wuhan_xiao = mix_brand("wuhan_xiao",5,4,3)
-print "img_shuiti_qiege is ", img_shuiti_qiege
+#img_wuhan_xiao = mix_brand("wuhan_xiao",5,4,3)
+#print "img_shuiti_qiege is ", img_shuiti_qiege
 #img_shuiti_qiege = mix_brand("shuiti_qiege_1", 5, 4, 3)
 
 #color_image_show(img_shuiti_qiege,'4-3-2 image, data set file')
@@ -97,8 +97,6 @@ def RGB_HSI(i):
 
     R, G, B = a.T
 
-    print R,G,B
-
     m = np.min(a,2).T
     M = np.max(a,2).T
 
@@ -133,30 +131,33 @@ def RGB_HSI(i):
 
     return data
 
-data_1=RGB_HSI(img_shuiti_qiege)
-data_2=RGB_HSI(img_zhouwei_qiege)
+data_1=RGB_HSI(img_shuiti_qiege).reshape(-1,3)
+data_2=RGB_HSI(img_zhouwei_qiege).reshape(-1,3)
+
 test = RGB_HSI(img_wuhan_xiao)
 
 #compare_histogram('HSI',data_1,data_2)
 #plt.show()
 
 # SVM
-data_1=data_1.tolist()
-data_2=data_2.tolist()
-data=data_1+data_2
-print len(data),len(data_1),len(data_2)
+data=np.vstack([data_1,data_2])
+#print len(data),len(data_1),len(data_2)
 x = np.array(data)
-print ,"type x",type(x),"shape x",x.shape
+#print "type x",type(x),"shape x",x.shape
 
-lable=[]
-
-for i in range(len(data_1)):
-    lable.append(1)
-for i in range (len(data_2)):
-    lable.append(0)
+lable=[0]*len(data_1) + [1]*len(data_2)
 y = np.array(lable)
-print y, len(y)
 
-clf_linear  = svm.SVC(kernel='linear').fit(x, y)
-answer = clf_linear.predict(test)
+#print y, len(y)
+
+print 'fitting svm...'
+
+clf_linear  = svm.SVC(kernel='linear',C=0.1).fit(x, y)
+
+shape = test.shape
+
+answer = clf_linear.predict(test.reshape(-1,3))
+
+answer.reshape(shape)
+
 print "answer is ", answer
