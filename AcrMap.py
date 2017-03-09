@@ -3,6 +3,7 @@ from skimage import io, exposure
 from matplotlib import pyplot as plt
 from IPython.display import  Image
 import colorsys
+from sklearn import svm
 
 
 
@@ -35,6 +36,7 @@ def mix_brand(path,band_1,band_2,band_3):
 #img_zhouwei_qiege = read_band("zhouwei_qiege", 3)
 img_shuiti_qiege = mix_brand("shuiti_qiege_1", 5, 4, 3)
 img_zhouwei_qiege = mix_brand("zhouwei_qiege", 5, 4, 3)
+img_wuhan_xiao = mix_brand("wuhan_xiao",5,4,3)
 print "img_shuiti_qiege is ", img_shuiti_qiege
 #img_shuiti_qiege = mix_brand("shuiti_qiege_1", 5, 4, 3)
 
@@ -86,9 +88,9 @@ def show_histogram(color_set, img):
 
 #show_histogram('rgb',img_shuiti_qiege)
 
-compare_histogram('rgb',img_shuiti_qiege,img_zhouwei_qiege)
+#compare_histogram('rgb',img_shuiti_qiege,img_zhouwei_qiege)
 
-plt.show()
+#plt.show()
 
 def RGB_HSI(i):
     a = np.asarray(i, float)
@@ -125,14 +127,36 @@ def RGB_HSI(i):
 
     R_I=((R+1)/np.power(I+1.0,2.0))
 
-    Total_stack = np.dstack((H,S,I,R_I))
-    print "R_I is", R_I
+    data = np.dstack((H,S,I))
+   # print "R_I is", R_I
 
 
-    return Total_stack
+    return data
 
-Total_stack_1=RGB_HSI(img_shuiti_qiege)
-Total_stack_2=RGB_HSI(img_zhouwei_qiege)
+data_1=RGB_HSI(img_shuiti_qiege)
+data_2=RGB_HSI(img_zhouwei_qiege)
+test = RGB_HSI(img_wuhan_xiao)
 
-compare_histogram('HSIR',Total_stack_1,Total_stack_2)
+#compare_histogram('HSI',data_1,data_2)
+#plt.show()
 
+# SVM
+data_1=data_1.tolist()
+data_2=data_2.tolist()
+data=data_1+data_2
+print len(data),len(data_1),len(data_2)
+x = np.array(data)
+print ,"type x",type(x),"shape x",x.shape
+
+lable=[]
+
+for i in range(len(data_1)):
+    lable.append(1)
+for i in range (len(data_2)):
+    lable.append(0)
+y = np.array(lable)
+print y, len(y)
+
+clf_linear  = svm.SVC(kernel='linear').fit(x, y)
+answer = clf_linear.predict(test)
+print "answer is ", answer
